@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Book Parking Slot - Smart Parking{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="fw-bold">
+                <i class="bi bi-calendar-plus"></i> Book Parking Slot
+            </h2>
+            <p class="text-muted">Find and book available parking slots</p>
+        </div>
+    </div>
+
+    <!-- My Active Bookings -->
+    {% set active_bookings = current_user.bookings|selectattr('status', 'equalto', 'active')|list %}
+    {% if active_bookings %}
+    <div class="card mb-4 border-success">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-check-circle"></i> My Active Bookings</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for booking in active_bookings %}
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="fw-bold">{{ booking.slot.name }}</h6>
+                            <p class="mb-2 small text-muted">
+                                <i class="bi bi-geo-alt"></i>
+                                {{ booking.slot.subregion.region.city.name }} →
+                                {{ booking.slot.subregion.region.name }} →
+                                {{ booking.slot.subregion.name }}
+                            </p>
+                            <p class="mb-2 small">
+                                <strong>Booked:</strong> {{ booking.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                            </p>
+                            <form method="POST" action="{{ url_for('owner_cancel_booking', id=booking.id) }}"
+                                onsubmit="return confirm('Cancel this booking?');">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-x-circle"></i> Cancel Booking
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Location Selection -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Select Location</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('owner_book_slot') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="city" class="form-label">City</label>
+                        <select class="form-select" id="city" name="city_id" onchange="this.form.submit()">
+                            <option value="">Select City</option>
+                            {% for city in cities %}
+                            <option value="{{ city.id }}" {% if selected_city and selected_city.id==city.id %}selected{%
+                                endif %}>
+                                {{ city.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="region" class="form-label">Region</label>
+                        <select class="form-select" id="region" name="region_id" onchange="this.form.submit()" {% if not
+                            selected_city %}disabled{% endif %}>
+                            <option value="">Select Region</option>
+                            {% if selected_city %}
+                            {% for region in selected_city.regions %}
+                            <option value="{{ region.id }}" {% if selected_region and selected_region.id==region.id
+                                %}selected{% endif %}>
+                                {{ region.name }}
+                            </option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="subregion" class="form-label">SubRegion</label>
+                        <select class="form-select" id="subregion" name="subregion_id" onchange="this.form.submit()" {%
+                            if not selected_region %}disabled{% endif %}>
+                            <option value="">Select SubRegion</option>
+                            {% if selected_region %}
+                            {% for subregion in selected_region.subregions %}
+                            <option value="{{ subregion.id }}" {% if selected_subregion and
+                                selected_subregion.id==subregion.id %}selected{% endif %}>
+                                {{ subregion.name }}
+                            </option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Available Slots -->
+    {% if selected_subregion %}
+    {% if available_slots %}
+    <div class="row g-4">
+        {% for slot in available_slots %}
+        <div class="col-md-4">
+            <div class="card h-100 border-success">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-p-square-fill text-success"></i> {{ slot.name }}
+                    </h5>
+                    <p class="text-muted small mb-3">
+                        <i class="bi bi-geo-alt"></i>
+                        {{ slot.subregion.region.city.name }} →
+                        {{ slot.subregion.region.name }} →
+                        {{ slot.subregion.name }}
+                    </p>
+                    <span class="badge bg-success mb-3">
+                        <i class="bi bi-check-circle"></i> Available
+                    </span>
+
+                    <form method="POST" action="{{ url_for('owner_book_slot') }}">
+                        <input type="hidden" name="slot_id" value="{{ slot.id }}">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-calendar-check"></i> Book This Slot
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center">
+        <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+        <h5 class="mt-3">No Available Slots</h5>
+        <p>All parking slots in this area are currently booked or offline.</p>
+    </div>
+    {% endif %}
+    {% elif request.args.get('city_id') %}
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle"></i>
+        <p class="mb-0">Please select a city, region, and subregion to view available parking slots.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

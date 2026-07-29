@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Smart Parking{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-box {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+    }
+
+    .stat-box.primary::before {
+        background: var(--primary);
+    }
+
+    .stat-box.success::before {
+        background: var(--secondary);
+    }
+
+    .stat-box.info::before {
+        background: #3B82F6;
+    }
+
+    .stat-box.warning::before {
+        background: var(--warning);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 1rem 0;
+    }
+
+    .quick-action {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s;
+        height: 100%;
+        border: 2px solid transparent;
+    }
+
+    .quick-action:hover {
+        border-color: var(--primary);
+        transform: translateY(-5px);
+    }
+
+    .action-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="admin-header">
+        <h2 class="fw-bold mb-2">
+            <i class="bi bi-shield-check"></i> Admin Control Panel
+        </h2>
+        <p class="mb-0 opacity-75">Manage your smart parking system</p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-box primary">
+                <h6 class="text-muted mb-1">Total Owners</h6>
+                <div class="stat-number text-primary">{{ total_owners }}</div>
+                <p class="text-muted mb-0 small">Registered users</p>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-box success">
+                <h6 class="text-muted mb-1">Total Slots</h6>
+                <div class="stat-number text-success">{{ total_slots }}</div>
+                <p class="text-muted mb-0 small">Parking spaces</p>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-box info">
+                <h6 class="text-muted mb-1">Active Bookings</h6>
+                <div class="stat-number" style="color: #3B82F6;">{{ active_bookings }}</div>
+                <p class="text-muted mb-0 small">Currently booked</p>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-box warning">
+                <h6 class="text-muted mb-1">Pending Requests</h6>
+                <div class="stat-number text-warning">{{ pending_requests }}</div>
+                <p class="text-muted mb-0 small">Awaiting approval</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="quick-action">
+                <div class="action-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-bank"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Bank Details</h5>
+                <p class="text-muted mb-3">Manage payment account information</p>
+                <a href="{{ url_for('admin_bank_details') }}" class="btn btn-primary">
+                    <i class="bi bi-gear"></i> Manage
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="quick-action">
+                <div class="action-icon bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Packages</h5>
+                <p class="text-muted mb-3">Create and manage parking packages</p>
+                <a href="{{ url_for('admin_packages') }}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Manage
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="quick-action">
+                <div class="action-icon bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-geo-alt"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Locations</h5>
+                <p class="text-muted mb-3">Manage cities, regions and slots</p>
+                <a href="{{ url_for('admin_locations') }}" class="btn btn-info">
+                    <i class="bi bi-map"></i> Manage
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-2">
+                                <i class="bi bi-clock-history"></i> Purchase Requests
+                            </h5>
+                            <p class="text-muted mb-0">Review and approve owner package purchases</p>
+                        </div>
+                        <a href="{{ url_for('admin_requests') }}" class="btn btn-warning">
+                            <i class="bi bi-list-check"></i> View All ({{ pending_requests }})
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

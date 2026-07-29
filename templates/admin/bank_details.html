@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Bank Details - Admin - Smart Parking{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Bank Details</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold">
+                <i class="bi bi-bank"></i> Bank Account Details
+            </h2>
+            <p class="text-muted">Manage bank account for receiving payments</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Update Bank Information</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('admin_bank_details') }}">
+                        <div class="mb-3">
+                            <label for="bank_name" class="form-label">
+                                <i class="bi bi-building"></i> Bank Name
+                            </label>
+                            <input type="text" class="form-control" id="bank_name" name="bank_name"
+                                value="{{ current_user.bank_name or '' }}" placeholder="e.g., HBL, Meezan Bank"
+                                required>
+                            <small class="text-muted">Enter the name of your bank</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="account_title" class="form-label">
+                                <i class="bi bi-person-badge"></i> Account Title
+                            </label>
+                            <input type="text" class="form-control" id="account_title" name="account_title"
+                                value="{{ current_user.account_title or '' }}" placeholder="Account holder name"
+                                required>
+                            <small class="text-muted">Name as it appears on the bank account</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="account_number" class="form-label">
+                                <i class="bi bi-hash"></i> Account Number
+                            </label>
+                            <input type="text" class="form-control" id="account_number" name="account_number"
+                                value="{{ current_user.account_number or '' }}" placeholder="Enter account number"
+                                required>
+                            <small class="text-muted">Your bank account number or IBAN</small>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> Save Bank Details
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Details Preview -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-eye"></i> Current Details</h5>
+                </div>
+                <div class="card-body">
+                    {% if current_user.bank_name %}
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Bank Name</small>
+                        <strong>{{ current_user.bank_name }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Account Title</small>
+                        <strong>{{ current_user.account_title }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Account Number</small>
+                        <strong>{{ current_user.account_number }}</strong>
+                    </div>
+
+                    <div class="alert alert-success" role="alert">
+                        <i class="bi bi-check-circle"></i> Bank details are set up
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i> No bank details configured yet
+                    </div>
+                    <p class="text-muted small">
+                        Add your bank details to receive payments from owners.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="fw-bold"><i class="bi bi-info-circle"></i> Important</h6>
+                    <ul class="small text-muted mb-0">
+                        <li>These details will be shown to owners for payment</li>
+                        <li>Double-check all information before saving</li>
+                        <li>Keep your bank details up to date</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

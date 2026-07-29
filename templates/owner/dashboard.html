@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Smart Parking{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        height: 100%;
+        border-left: 4px solid var(--primary);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .action-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        height: 100%;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+
+    .action-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-5px);
+    }
+
+    .package-info {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="dashboard-header">
+        <div class="container">
+            <h2 class="fw-bold mb-2">
+                <i class="bi bi-speedometer2"></i> Welcome back, {{ current_user.name }}!
+            </h2>
+            <p class="mb-0 opacity-75">Manage your parking and bookings</p>
+        </div>
+    </div>
+
+    {% if not current_user.package_active %}
+    <div class="alert alert-warning border-0 shadow-sm mb-4" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+            <div class="flex-grow-1">
+                <h5 class="alert-heading mb-1">No Active Package</h5>
+                <p class="mb-2">Purchase a package to start booking parking slots.</p>
+                <a href="{{ url_for('owner_packages') }}" class="btn btn-warning btn-sm">
+                    <i class="bi bi-box"></i> View Packages
+                </a>
+            </div>
+        </div>
+    </div>
+    {% elif not current_user.rfid_card %}
+    <div class="alert alert-info border-0 shadow-sm mb-4" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle-fill fs-3 me-3"></i>
+            <div>
+                <h5 class="alert-heading mb-1">RFID Card Pending</h5>
+                <p class="mb-0">Your purchase is being processed. You'll receive RFID card details once approved.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-car-front-fill"></i>
+                </div>
+                <h6 class="text-muted mb-1">Car Number</h6>
+                <h4 class="fw-bold mb-0">{{ current_user.car_number }}</h4>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-credit-card"></i>
+                </div>
+                <h6 class="text-muted mb-1">RFID Card</h6>
+                <h4 class="fw-bold mb-0">
+                    {% if current_user.rfid_card %}
+                    {{ current_user.rfid_card }}
+                    {% else %}
+                    <small class="text-muted">Not Assigned</small>
+                    {% endif %}
+                </h4>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-box"></i>
+                </div>
+                <h6 class="text-muted mb-1">Package Status</h6>
+                <h4 class="fw-bold mb-0">
+                    {% if current_user.package_active %}
+                    <span class="text-success">Active</span>
+                    {% else %}
+                    <span class="text-danger">Inactive</span>
+                    {% endif %}
+                </h4>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <h6 class="text-muted mb-1">Active Bookings</h6>
+                <h4 class="fw-bold mb-0">
+                    {{ current_user.bookings|selectattr('status', 'equalto', 'active')|list|length }}
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="action-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
+                        <i class="bi bi-box"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Packages</h5>
+                        <p class="text-muted mb-0 small">View and purchase packages</p>
+                    </div>
+                </div>
+                <p class="text-muted mb-3">Explore available subscription packages and renew your membership.</p>
+                <a href="{{ url_for('owner_packages') }}" class="btn btn-primary">
+                    <i class="bi bi-arrow-right-circle"></i> View Packages
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="action-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success me-3">
+                        <i class="bi bi-geo-alt"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Book Parking</h5>
+                        <p class="text-muted mb-0 small">Find available slots</p>
+                    </div>
+                </div>
+                <p class="text-muted mb-3">Browse and book parking slots in your preferred location.</p>
+                {% if current_user.package_active and current_user.rfid_card %}
+                <a href="{{ url_for('owner_book_slot') }}" class="btn btn-success">
+                    <i class="bi bi-calendar-plus"></i> Book Now
+                </a>
+                {% else %}
+                <button class="btn btn-secondary" disabled>
+                    <i class="bi bi-lock"></i> Activate Package First
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.package_active and current_user.package %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="package-info">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-info-circle"></i> Current Package Details
+                </h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <p class="mb-1 opacity-75">Package Name</p>
+                        <h6 class="fw-bold">{{ current_user.package.name }}</h6>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="mb-1 opacity-75">Duration</p>
+                        <h6 class="fw-bold">{{ current_user.package.duration_months }} Months</h6>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="mb-1 opacity-75">Start Date</p>
+                        <h6 class="fw-bold">{{ current_user.package_start_date.strftime('%d %b %Y') if
+                            current_user.package_start_date else 'N/A' }}</h6>
+                    </div>
+                    <div class="col-md-3">
+                        <p class="mb-1 opacity-75">End Date</p>
+                        <h6 class="fw-bold">{{ current_user.package_end_date.strftime('%d %b %Y') if
+                            current_user.package_end_date else 'N/A' }}</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

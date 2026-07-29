@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Location Management - Admin - Smart Parking{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Locations</li>
+                </ol>
+            </nav>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold">
+                        <i class="bi bi-geo-alt"></i> Location Management
+                    </h2>
+                    <p class="text-muted">Manage cities, regions, subregions and parking slots</p>
+                </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCityModal">
+                    <i class="bi bi-plus-circle"></i> Add City
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Locations Hierarchy -->
+    {% if cities %}
+    <div class="row">
+        <div class="col-12">
+            {% for city in cities %}
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-building"></i> {{ city.name }}
+                        </h5>
+                        <div>
+                            <button class="btn btn-sm btn-light"
+                                onclick="showAddRegionModal({{ city.id }}, '{{ city.name }}')">
+                                <i class="bi bi-plus"></i> Add Region
+                            </button>
+                            <form method="POST" action="{{ url_for('admin_delete_city', id=city.id) }}"
+                                style="display: inline;" onsubmit="return confirm('Delete city and all its data?');">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if city.regions %}
+                    {% for region in city.regions %}
+                    <div class="border-start border-3 border-success ps-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">
+                                <i class="bi bi-geo"></i> {{ region.name }}
+                            </h6>
+                            <div>
+                                <button class="btn btn-sm btn-success"
+                                    onclick="showAddSubregionModal({{ region.id }}, '{{ region.name }}')">
+                                    <i class="bi bi-plus"></i> Add SubRegion
+                                </button>
+                                <form method="POST" action="{{ url_for('admin_delete_region', id=region.id) }}"
+                                    style="display: inline;"
+                                    onsubmit="return confirm('Delete region and all its data?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        {% if region.subregions %}
+                        {% for subregion in region.subregions %}
+                        <div class="border-start border-3 border-info ps-3 mb-2 ms-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>
+                                    <i class="bi bi-signpost"></i> {{ subregion.name }}
+                                    {% if subregion.gate_device_token %}
+                                    <span class="badge bg-info ms-2">Gate: {{ subregion.gate_device_token }}</span>
+                                    {% endif %}
+                                </strong>
+                                <div>
+                                    <button class="btn btn-sm btn-info"
+                                        onclick="showAddSlotModal({{ subregion.id }}, '{{ subregion.name }}')">
+                                        <i class="bi bi-plus"></i> Add Slot
+                                    </button>
+                                    <form method="POST"
+                                        action="{{ url_for('admin_delete_subregion', id=subregion.id) }}"
+                                        style="display: inline;"
+                                        onsubmit="return confirm('Delete subregion and all its slots?');">
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            {% if subregion.slots %}
+                            <div class="ms-3">
+                                {% for slot in subregion.slots %}
+                                <div
+                                    class="d-flex justify-content-between align-items-center p-2 mb-1 bg-light rounded">
+                                    <span>
+                                        <i class="bi bi-p-square"></i> {{ slot.name }}
+                                        <span class="badge bg-secondary ms-2">{{ slot.device_token }}</span>
+                                        <span class="badge 
+                                                        {% if slot.status == 'available' %}bg-success
+                                                        {% elif slot.status == 'booked' %}bg-warning
+                                                        {% else %}bg-danger{% endif %} ms-1">
+                                            {{ slot.status|capitalize }}
+                                        </span>
+                                    </span>
+                                    <form method="POST" action="{{ url_for('admin_delete_slot', id=slot.id) }}"
+                                        style="display: inline;" onsubmit="return confirm('Delete this slot?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="text-muted small ms-3">No slots yet</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p class="text-muted small ms-3">No subregions yet</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">No regions yet. Click "Add Region" to get started.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle" style="font-size: 3rem;"></i>
+        <h4 class="mt-3">No Cities Yet</h4>
+        <p>Start by adding your first city.</p>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCityModal">
+            <i class="bi bi-plus-circle"></i> Add First City
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add City Modal -->
+<div class="modal fade" id="addCityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-building"></i> Add City</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_add_city') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="city_name" class="form-label">City Name</label>
+                        <input type="text" class="form-control" id="city_name" name="name" placeholder="e.g., Islamabad"
+                            required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add City</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Region Modal -->
+<div class="modal fade" id="addRegionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-geo"></i> Add Region</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_add_region') }}">
+                <div class="modal-body">
+                    <p class="text-muted">Adding region to: <strong id="region_city_name"></strong></p>
+                    <input type="hidden" id="region_city_id" name="city_id">
+                    <div class="mb-3">
+                        <label for="region_name" class="form-label">Region Name</label>
+                        <input type="text" class="form-control" id="region_name" name="name"
+                            placeholder="e.g., Chak Shahzad" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Region</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add SubRegion Modal -->
+<div class="modal fade" id="addSubregionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="bi bi-signpost"></i> Add SubRegion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_add_subregion') }}">
+                <div class="modal-body">
+                    <p class="text-muted">Adding subregion to: <strong id="subregion_region_name"></strong></p>
+                    <input type="hidden" id="subregion_region_id" name="region_id">
+                    <div class="mb-3">
+                        <label for="subregion_name" class="form-label">SubRegion Name</label>
+                        <input type="text" class="form-control" id="subregion_name" name="name"
+                            placeholder="e.g., Iqra University" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info">Add SubRegion</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Slot Modal -->
+<div class="modal fade" id="addSlotModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-p-square"></i> Add Parking Slot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_add_slot') }}">
+                <div class="modal-body">
+                    <p class="text-muted">Adding slot to: <strong id="slot_subregion_name"></strong></p>
+                    <input type="hidden" id="slot_subregion_id" name="subregion_id">
+                    <div class="mb-3">
+                        <label for="slot_name" class="form-label">Slot Name</label>
+                        <input type="text" class="form-control" id="slot_name" name="name" placeholder="e.g., Slot A1"
+                            required>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> A unique device token will be automatically generated for the
+                        ESP32 device.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Add Slot</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showAddRegionModal(cityId, cityName) {
+        document.getElementById('region_city_id').value = cityId;
+        document.getElementById('region_city_name').textContent = cityName;
+        new bootstrap.Modal(document.getElementById('addRegionModal')).show();
+    }
+
+    function showAddSubregionModal(regionId, regionName) {
+        document.getElementById('subregion_region_id').value = regionId;
+        document.getElementById('subregion_region_name').textContent = regionName;
+        new bootstrap.Modal(document.getElementById('addSubregionModal')).show();
+    }
+
+    function showAddSlotModal(subregionId, subregionName) {
+        document.getElementById('slot_subregion_id').value = subregionId;
+        document.getElementById('slot_subregion_name').textContent = subregionName;
+        new bootstrap.Modal(document.getElementById('addSlotModal')).show();
+    }
+</script>
+{% endblock %}
